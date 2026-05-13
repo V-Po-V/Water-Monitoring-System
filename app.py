@@ -54,6 +54,24 @@ def insert_reading(data):
     conn.commit()
     conn.close()
 
+def cleanup_old_rows():
+
+    conn = sqlite3.connect("sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""
+        DELETE FROM readings
+        WHERE id NOT IN (
+            SELECT id
+            FROM readings
+            ORDER BY id DESC
+            LIMIT 100000
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
 app = Flask(__name__)
 
 # holds most recent reading
@@ -148,6 +166,8 @@ def receive_data():
     }
 
     insert_reading(latest_data)
+
+    cleanup_old_rows()
 
     print("Stored in DB:", latest_data)
 
