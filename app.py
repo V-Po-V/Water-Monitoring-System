@@ -1,7 +1,8 @@
 #Database intergration with SQLite - works with r4-wifi-8
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import sqlite3
 import os
+import csv
 from datetime import datetime
 
 def init_db():
@@ -187,6 +188,36 @@ def history():
     ]
 
     return jsonify(data)
+
+@app.route('/download')
+def download_csv():
+
+    conn = sqlite3.connect("sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""
+        SELECT timestamp, temperature, turbidity, tds, ec, ph, orp
+        FROM readings
+        ORDER BY id DESC
+    """)
+
+    rows = c.fetchall()
+    conn.close()
+
+    def generate():
+
+        yield "timestamp,temperature,turbidity,tds,ec,ph,orp\n"
+
+        for row in rows:
+            yield f"{row[0]},{row[1]},{row[2]},{row[3]},{row[4]},{row[5]},{row[6]}\n"
+
+    return Response(
+        generate(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=sensor_data.csv"
+        }
+    )
 
 init_db()
 
