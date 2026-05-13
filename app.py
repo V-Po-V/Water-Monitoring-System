@@ -45,7 +45,7 @@ def insert_reading(data):
             nitrogen,
             phosphate
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data.get("timestamp"),
         data.get("temperature"),
@@ -82,6 +82,9 @@ def cleanup_old_rows():
     conn.close()
 
 app = Flask(__name__)
+
+if os.path.exists("sensor_data.db"):
+    os.remove("sensor_data.db")
 
 # holds most recent reading
 latest_data = {}
