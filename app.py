@@ -18,7 +18,10 @@ def init_db():
             tds REAL,
             ec REAL,
             ph REAL,
-            orp REAL
+            orp REAL,
+            cod REAL,
+            nitrogen REAL,
+            phosphate REAL
         )
     """)
 
@@ -37,7 +40,10 @@ def insert_reading(data):
             tds,
             ec,
             ph,
-            orp
+            orp,
+            cod,
+            nitrogen,
+            phosphate
         )
         VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
@@ -48,6 +54,9 @@ def insert_reading(data):
         data.get("ec"),
         data.get("ph"),
         data.get("orp"),
+        data.get("cod"),
+        data.get("nitrogen"),
+        data.get("phosphate"),
 
     ))
     
@@ -109,6 +118,9 @@ def dashboard():
         <div class="card">EC: <span id="ec">-</span></div>
         <div class="card">pH: <span id="ph">-</span></div>
         <div class="card">ORP: <span id="orp">-</span></div>
+        <div class="card">COD: <span id="cod">-</span></div>
+        <div class="card">Nitrogen: <span id="nitrogen">-</span></div>
+        <div class="card">Phosphates: <span id="phosphate">-</span></div>
         <div class="card">Timestamp: <span id="timestamp">-</span></div>
 
         <script>
@@ -126,6 +138,9 @@ def dashboard():
                     document.getElementById("ec").innerText = data.ec;
                     document.getElementById("ph").innerText = data.ph;
                     document.getElementById("orp").innerText = data.orp;
+                    document.getElementById("cod").innerText = data.cod;
+                    document.getElementById("nitrogen").innerText = data.nitrogen;
+                    document.getElementById("phosphate").innerText = data.phosphate;
                     document.getElementById("timestamp").innerText = data.timestamp;
 
                     document.getElementById("status").innerText = "Live";
@@ -163,6 +178,9 @@ def receive_data():
         "ec": data.get("ec"),
         "ph": data.get("ph"),
         "orp": data.get("orp"),
+        "cod": data.get("cod"),
+        "nitrogen": data.get("nitrogen"),
+        "phosphate": data.get("phosphate"),
     }
 
     insert_reading(latest_data)
@@ -185,7 +203,7 @@ def history():
     c = conn.cursor()
 
     c.execute("""
-        SELECT timestamp, temperature, turbidity, tds, ec, ph, orp
+        SELECT timestamp, temperature, turbidity, tds, ec, ph, orp, cod, nitrogen, phosphate
         FROM readings
         ORDER BY id DESC
         LIMIT 100
@@ -203,6 +221,9 @@ def history():
             "ec": r[4],
             "ph": r[5],
             "orp": r[6],
+            "cod": r[7],
+            "nitrogen": r[8],
+            "phosphate": r[9],
         }
         for r in rows
     ]
@@ -216,7 +237,7 @@ def download_csv():
     c = conn.cursor()
 
     c.execute("""
-        SELECT timestamp, temperature, turbidity, tds, ec, ph, orp
+        SELECT timestamp, temperature, turbidity, tds, ec, ph, orp, cod, nitrogen, phosphate
         FROM readings
         ORDER BY id DESC
     """)
@@ -226,10 +247,10 @@ def download_csv():
 
     def generate():
 
-        yield "timestamp,temperature,turbidity,tds,ec,ph,orp\n"
+        yield "timestamp,temperature,turbidity,tds,ec,ph,orp,cod,nitrogen,phosphate\n"
 
         for row in rows:
-            yield f"{row[0]},{row[1]},{row[2]},{row[3]},{row[4]},{row[5]},{row[6]}\n"
+            yield f"{row[0]},{row[1]},{row[2]},{row[3]},{row[4]},{row[5]},{row[6]},{row[7]},{row[8]},{row[9]}\n"
 
     return Response(
         generate(),
